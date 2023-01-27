@@ -103,7 +103,7 @@ func ShortenURL(ctx *gin.Context){
 	if requestBody.Expiry == 0 {
 		requestBody.Expiry = 24
 	}
-	if err := defaultClient.Set(context.Background(), uid, requestBody.URL, requestBody.Expiry * 3600 * time.Second).Err(); err != nil{
+	if err := defaultClient.Set(context.Background(), uid, requestBody.URL, requestBody.Expiry * time.Hour).Err(); err != nil{
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -117,13 +117,14 @@ func ShortenURL(ctx *gin.Context){
 	}
 
 	client.Decr(context.Background(), ctx.RemoteIP())
+
 	// get the rate remaining
 	rateRemaining, _ := client.Get(context.Background(), ctx.RemoteIP()).Result()
 	response.XRateRemaining, _ = strconv.Atoi(rateRemaining)
 
 	// get rate limit reset
 	ttl, _ := client.TTL(context.Background(), ctx.RemoteIP()).Result()
-	response.XRateLimitReset = ttl / (time.Nanosecond * time.Minute)
+	response.XRateLimitReset = ttl / time.Minute
 
 	// set custom short
 	response.CustomShort = fmt.Sprint(os.Getenv("DOMAIN"), "/", uid)
@@ -137,7 +138,7 @@ func setQuota(ip string, quota int) (client *redis.Client, limit time.Duration, 
 
 	result, noDataError := client.Get(context.Background(), ip).Result()
 	if noDataError == redis.Nil {
-		if err2 := client.Set(context.Background(), ip, quota, 30 * 60 * time.Second).Err(); err2 != nil{
+		if err2 := client.Set(context.Background(), ip, quota, 30 * time.Minute).Err(); err2 != nil{
 			err = err2
 			return
 		}
@@ -147,7 +148,7 @@ func setQuota(ip string, quota int) (client *redis.Client, limit time.Duration, 
 	appQuota, _ := strconv.Atoi(result)
 	if appQuota <= 0 {
 		ttl, _ := client.TTL(context.Background(), ip).Result()
-		limit = ttl / (time.Nanosecond * time.Minute)
+		limit = ttl / time.Minute
 		err = errors.New("rate limit exceeded")
 	}
 
