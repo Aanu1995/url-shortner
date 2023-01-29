@@ -12,7 +12,6 @@ import (
 	"github.com/Aanu1995/url-shortner/api/database"
 	"github.com/Aanu1995/url-shortner/api/helpers"
 	"github.com/Aanu1995/url-shortner/api/models"
-	"github.com/asaskevich/govalidator"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v9"
 	"github.com/google/uuid"
@@ -21,10 +20,10 @@ import (
 
 
 func ResolveURL(ctx *gin.Context){
-	url := ctx.Param("url")
+	var request models.ResolveRequest
 
-	if url == ""{
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid url"})
+	if err := ctx.ShouldBindUri(&request); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -32,7 +31,7 @@ func ResolveURL(ctx *gin.Context){
 	defer defaultClient.Close()
 
 
-	result, err := defaultClient.Get(context.Background(), url).Result()
+	result, err := defaultClient.Get(context.Background(), request.URL).Result()
 	if err == redis.Nil {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "link does not exist"})
 		return
@@ -49,7 +48,7 @@ func ResolveURL(ctx *gin.Context){
 func ShortenURL(ctx *gin.Context){
 	var requestBody models.Request
 
-	if err := ctx.BindJSON(&requestBody); err != nil {
+	if err := ctx.ShouldBindJSON(&requestBody); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -70,12 +69,6 @@ func ShortenURL(ctx *gin.Context){
 		return
 	}
 	defer client.Close()
-
-	// checks if input is an actual url
-	if !govalidator.IsURL(requestBody.URL){
-		ctx.JSON(http.StatusServiceUnavailable, gin.H{"error": "invalid URL"})
-		return
-	}
 
 	// check domain error
 	if !helpers.RemoveDomainError(requestBody.URL) {
