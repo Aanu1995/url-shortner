@@ -27,7 +27,7 @@ func ResolveURL(ctx *gin.Context){
 		return
 	}
 
-	defaultClient := database.CreateClient(0)
+	defaultClient := database.CreateClient()
 	defer defaultClient.Close()
 
 
@@ -84,7 +84,7 @@ func ShortenURL(ctx *gin.Context){
 		uid = uuid.NewString()[:6]
 	}
 
-	defaultClient := database.CreateClient(0)
+	defaultClient := database.CreateClient()
 	defer defaultClient.Close()
 
 	result, _ := defaultClient.Get(context.Background(), uid).Result()
@@ -127,7 +127,7 @@ func ShortenURL(ctx *gin.Context){
 
 
 func setQuota(ip string, quota int) (client *redis.Client, limit time.Duration, err error){
-	client = database.CreateClient(1)
+	client = database.CreateClient()
 
 	result, noDataError := client.Get(context.Background(), ip).Result()
 	if noDataError == redis.Nil {

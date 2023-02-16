@@ -7,11 +7,11 @@ import (
 )
 
 
-func CreateClient(dbNo int) (client *redis.Client){
+func CreateClient() (client *redis.Client){
 	client = redis.NewClient(&redis.Options{
     Addr: os.Getenv("DB_ADDRESS"),
     Password: os.Getenv("DB_PASS"),
-    DB: dbNo,
+    DB: 0,
   })
 
 	return
