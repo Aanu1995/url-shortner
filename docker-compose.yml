@@ -11,4 +11,4 @@ services:
   database:
     image: redis:7.0.8-alpine
     ports:
-      - 6379:6379
+      - 13124:13124
