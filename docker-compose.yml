@@ -1,7 +1,7 @@
 version: "3.9"
 services:
   api:
-    image: 665860285991.dkr.ecr.us-east-2.amazonaws.com/url-shortner:09a7c9d425debfd02b14573aaf75d507f09fe548
+    image: url-shortner
     ports:
       - 3000:3000
     restart: always
