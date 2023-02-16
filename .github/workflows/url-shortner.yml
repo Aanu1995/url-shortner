@@ -24,6 +24,9 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
+      - name: Load secret and save to .env
+        run: aws secretsmanager get-secret-value --secret-id url-shortner --query SecretString --output text | jq -r 'to_entries|map("\(.key)=\(.value)")|.[]' > ./api/.env
+
       - name: Build, tag, and push the image to Amazon ECR
         id: build-image
         env:
